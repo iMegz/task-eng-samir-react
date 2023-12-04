@@ -1,0 +1,13 @@
+.container {
+  width: 80%;
+  margin: auto;
+}
+
+nav {
+  padding: 20px 0;
+}
+
+.price-form {
+  display: flex;
+  gap: 3px;
+}
