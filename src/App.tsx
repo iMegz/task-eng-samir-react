@@ -47,6 +47,63 @@ function App() {
     };
   }
 
+  function renderItems() {
+    if (!items.length) return <h3>Loading...</h3>;
+    else
+      return (
+        <table>
+          <thead>
+            <tr>
+              <th />
+              {items.map((item) => (
+                <th key={item.id}>{item.name}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Brand</td>
+              {items.map((item) => (
+                <td key={item.id}>{item.brand}</td>
+              ))}
+            </tr>
+            <tr>
+              <td>Model</td>
+              {items.map((item) => (
+                <td key={item.id}>{item.model}</td>
+              ))}
+            </tr>
+            <tr>
+              <td>Color</td>
+              {items.map((item) => (
+                <td key={item.id}>{item.color}</td>
+              ))}
+            </tr>
+            <tr>
+              <td>Price</td>
+              {items.map((item, i) => (
+                <td key={item.id}>
+                  <form
+                    className="price-form"
+                    onSubmit={handleEditPrice(i, item.id)}
+                  >
+                    <input
+                      type="number"
+                      step="any"
+                      className="form-control"
+                      defaultValue={item.price}
+                      ref={(el) => (inputRefs.current[i] = el!)}
+                    />
+                    <button className="btn btn-primary-sm">Edit</button>
+                  </form>
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      );
+  }
+
   return (
     <>
       <nav>
@@ -62,56 +119,7 @@ function App() {
       <main>
         <div className="container">
           <h1 style={{ margin: "20px 0" }}>Items</h1>
-          <table>
-            <thead>
-              <tr>
-                <th />
-                {items.map((item) => (
-                  <th key={item.id}>{item.name}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Brand</td>
-                {items.map((item) => (
-                  <td key={item.id}>{item.brand}</td>
-                ))}
-              </tr>
-              <tr>
-                <td>Model</td>
-                {items.map((item) => (
-                  <td key={item.id}>{item.model}</td>
-                ))}
-              </tr>
-              <tr>
-                <td>Color</td>
-                {items.map((item) => (
-                  <td key={item.id}>{item.color}</td>
-                ))}
-              </tr>
-              <tr>
-                <td>Price</td>
-                {items.map((item, i) => (
-                  <td key={item.id}>
-                    <form
-                      className="price-form"
-                      onSubmit={handleEditPrice(i, item.id)}
-                    >
-                      <input
-                        type="number"
-                        step="any"
-                        className="form-control"
-                        defaultValue={item.price}
-                        ref={(el) => (inputRefs.current[i] = el!)}
-                      />
-                      <button className="btn btn-primary-sm">Edit</button>
-                    </form>
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
+          {renderItems()}
           <br />
           <Pagination
             count={count}
