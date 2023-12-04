@@ -1,19 +1,31 @@
-import { FormEvent, useRef, useState } from "react";
-import styles from "./Modal.module.css";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import styles from "./NewItemModal.module.css";
 import axios from "axios";
 
 interface ModalProps {
   closeModal: () => void;
 }
 
-export default function Modal({ closeModal }: ModalProps) {
+interface Brand {
+  id: number;
+  name: string;
+}
+
+export default function NewItemModal({ closeModal }: ModalProps) {
   const nameRef = useRef<HTMLInputElement>(null);
-  const brandRef = useRef<HTMLInputElement>(null);
+  const brandRef = useRef<HTMLSelectElement>(null);
   const modelRef = useRef<HTMLInputElement>(null);
   const colorRef = useRef<HTMLInputElement>(null);
   const priceRef = useRef<HTMLInputElement>(null);
 
+  const [brands, setBrands] = useState<Brand[] | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    axios.get(`${import.meta.env.VITE_ORIGIN}/brand`).then(({ data }) => {
+      setBrands(data);
+    });
+  }, []);
 
   async function hanldeOnSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -21,7 +33,7 @@ export default function Modal({ closeModal }: ModalProps) {
 
     const data = {
       name: nameRef.current?.value,
-      brand: brandRef.current?.value,
+      brandId: +brandRef.current?.value!,
       model: modelRef.current?.value,
       color: colorRef.current?.value,
       price: priceRef.current?.value,
@@ -55,17 +67,27 @@ export default function Modal({ closeModal }: ModalProps) {
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="brand">Brand</label>
-            <input
-              required
-              ref={brandRef}
-              id="brand"
-              name="brand"
-              type="text"
-              className="form-control"
-            />
-          </div>
+          {brands ? (
+            <div className="form-group">
+              <label htmlFor="brand">Brand</label>
+              <select
+                ref={brandRef}
+                defaultValue={brands[0].id}
+                id="brandId"
+                className="form-control"
+              >
+                {brands.map((brand) => {
+                  return (
+                    <option key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          ) : (
+            <h3>Loading brands</h3>
+          )}
 
           <div className="form-group">
             <label htmlFor="model">Model</label>

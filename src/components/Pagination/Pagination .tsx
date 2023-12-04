@@ -39,7 +39,7 @@ export default function Pagination({
         {pages}
         <li className={styles["page-item"]}>
           <button
-            disabled={current === pages.length}
+            disabled={current >= pages.length}
             onClick={() => setParams(`p=${current + 1}`)}
             className={styles["page-link"]}
           >

@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import Modal from "./components/Modal/Modal";
+import NewItemModal from "./components/NewItemModal/NewItemModal";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
@@ -9,7 +9,7 @@ import Pagination from "./components/Pagination/Pagination ";
 interface Item {
   id: number;
   name: string;
-  brand: string;
+  brand: { name: string };
   model: string;
   color: string;
   price: number;
@@ -27,7 +27,7 @@ function App() {
   const [showModal, setShowModal] = useState(false);
   const [change, setChange] = useState(true);
   const [refresh, setRefresh] = useState(true);
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<Item[] | null>(null);
   const [count, setCount] = useState(0);
   const [searchParams, setSearchParams] = useSearchParams();
   const inputRefs = useRef<HTMLInputElement[]>([]);
@@ -37,6 +37,7 @@ function App() {
   const changes = useMemo(getChanges, [change, items]);
 
   function getChanges() {
+    if (!items) return [];
     const changes = inputRefs.current.reduce((prev, curr, i) => {
       const item = items.find((item) => item?.id.toString() === curr?.id);
       if (item && curr && curr.value !== item.price.toString()) {
@@ -75,7 +76,8 @@ function App() {
   }
 
   function renderItems() {
-    if (!items.length) return <h3>Loading...</h3>;
+    if (!items) return <h3>Loading...</h3>;
+    if (!items.length) return <h3>No items found</h3>;
     else
       return (
         <>
@@ -92,7 +94,7 @@ function App() {
               <tr>
                 <td>Brand</td>
                 {items.map((item) => (
-                  <td key={item.id}>{item.brand}</td>
+                  <td key={item.id}>{item.brand.name}</td>
                 ))}
               </tr>
               <tr>
@@ -173,7 +175,7 @@ function App() {
         </div>
         {showModal
           ? createPortal(
-              <Modal closeModal={() => setShowModal(false)} />,
+              <NewItemModal closeModal={() => setShowModal(false)} />,
               document.getElementById("modal") as Element
             )
           : null}
