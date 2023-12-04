@@ -56,9 +56,14 @@ function App() {
   }
 
   useEffect(() => {
-    axios.get(`${import.meta.env.VITE_ORIGIN}/item/count`).then((count) => {
-      setCount(count.data);
-    });
+    axios
+      .get(`${import.meta.env.VITE_ORIGIN}/item/count`)
+      .then((count) => {
+        setCount(count.data);
+      })
+      .catch((error) => {
+        alert(`Error: ${error}`);
+      });
   }, []);
 
   useEffect(() => {
@@ -67,6 +72,9 @@ function App() {
       .get(`${import.meta.env.VITE_ORIGIN}/item?p=${page}`)
       .then(({ data }) => {
         setItems(data);
+      })
+      .catch((error) => {
+        alert(`Error: ${error}`);
       });
   }, [searchParams, refresh]);
 
