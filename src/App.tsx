@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import Modal from "./components/Modal/Modal";
 import { createPortal } from "react-dom";
@@ -15,14 +15,44 @@ interface Item {
   price: number;
 }
 
+type ChangedPrice =
+  | {
+      id: string;
+      oldValue: number;
+      newValue: string;
+    }
+  | undefined;
+
 function App() {
   const [showModal, setShowModal] = useState(false);
+  const [change, setChange] = useState(true);
+  const [refresh, setRefresh] = useState(true);
   const [items, setItems] = useState<Item[]>([]);
   const [count, setCount] = useState(0);
   const [searchParams, setSearchParams] = useSearchParams();
   const inputRefs = useRef<HTMLInputElement[]>([]);
 
   const page = +(searchParams.get("p") || 1);
+
+  const changes = useMemo(getChanges, [change, items]);
+
+  function getChanges() {
+    const changes = inputRefs.current.reduce((prev, curr, i) => {
+      const item = items.find((item) => item?.id.toString() === curr?.id);
+      if (item && curr && curr.value !== item.price.toString()) {
+        const changed = {
+          id: curr.id,
+          oldValue: items[i].price,
+          newValue: curr.value,
+        };
+        return [...prev, changed];
+      }
+
+      return prev;
+    }, [] as ChangedPrice[]);
+
+    return changes;
+  }
 
   useEffect(() => {
     axios.get(`${import.meta.env.VITE_ORIGIN}/item/count`).then((count) => {
@@ -31,76 +61,90 @@ function App() {
   }, []);
 
   useEffect(() => {
+    setChange((prev) => !prev);
     axios
       .get(`${import.meta.env.VITE_ORIGIN}/item?p=${page}`)
       .then(({ data }) => {
         setItems(data);
       });
-  }, [searchParams]);
+  }, [searchParams, refresh]);
 
-  function handleEditPrice(index: number, itemId: number) {
-    return function (e: FormEvent) {
-      e.preventDefault();
-      const data = { price: inputRefs.current[index].value };
-      axios.patch(`${import.meta.env.VITE_ORIGIN}/item/${itemId}`, data);
-      alert("Price changed");
-    };
+  async function handleEditPrice() {
+    await axios.patch(`${import.meta.env.VITE_ORIGIN}/item`, changes);
+    setRefresh((prev) => !prev);
   }
 
   function renderItems() {
     if (!items.length) return <h3>Loading...</h3>;
     else
       return (
-        <table>
-          <thead>
-            <tr>
-              <th />
-              {items.map((item) => (
-                <th key={item.id}>{item.name}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Brand</td>
-              {items.map((item) => (
-                <td key={item.id}>{item.brand}</td>
-              ))}
-            </tr>
-            <tr>
-              <td>Model</td>
-              {items.map((item) => (
-                <td key={item.id}>{item.model}</td>
-              ))}
-            </tr>
-            <tr>
-              <td>Color</td>
-              {items.map((item) => (
-                <td key={item.id}>{item.color}</td>
-              ))}
-            </tr>
-            <tr>
-              <td>Price</td>
-              {items.map((item, i) => (
-                <td key={item.id}>
-                  <form
-                    className="price-form"
-                    onSubmit={handleEditPrice(i, item.id)}
-                  >
+        <>
+          <table>
+            <thead>
+              <tr>
+                <th />
+                {items.map((item) => (
+                  <th key={item.id}>{item.name}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Brand</td>
+                {items.map((item) => (
+                  <td key={item.id}>{item.brand}</td>
+                ))}
+              </tr>
+              <tr>
+                <td>Model</td>
+                {items.map((item) => (
+                  <td key={item.id}>{item.model}</td>
+                ))}
+              </tr>
+              <tr>
+                <td>Color</td>
+                {items.map((item) => (
+                  <td key={item.id}>{item.color}</td>
+                ))}
+              </tr>
+              <tr>
+                <td>Price</td>
+                {items.map((item, i) => (
+                  <td key={item.id}>
                     <input
                       type="number"
                       step="any"
-                      className="form-control"
+                      className={`form-control${
+                        changes.some((v) => v?.id === item.id.toString())
+                          ? " modified"
+                          : ""
+                      }`}
+                      id={`${item.id}`}
                       defaultValue={item.price}
+                      onChange={() => setChange((prev) => !prev)}
                       ref={(el) => (inputRefs.current[i] = el!)}
                     />
-                    <button className="btn btn-primary-sm">Edit</button>
-                  </form>
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+          <div
+            style={{
+              display: "flex",
+              padding: "10px 0",
+              justifyContent: "center",
+            }}
+          >
+            <button
+              disabled={!changes.length}
+              className="btn btn-primary"
+              onClick={handleEditPrice}
+            >
+              Save
+            </button>
+          </div>
+        </>
       );
   }
 

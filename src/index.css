@@ -22,6 +22,18 @@
   transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
 }
 
+.btn:disabled {
+  background-color: #ccc;
+  color: black;
+  border: transparent;
+}
+
+.btn:disabled:hover {
+  background-color: #ccc;
+  color: #000;
+  border: transparent;
+}
+
 .btn-primary {
   color: #ffffff;
   background-color: var(--primary);
@@ -88,6 +100,11 @@
 .form-control:hover,
 .form-control:focus {
   border-color: var(--primary);
+}
+
+.form-control.modified {
+  border-color: lightgreen;
+  box-shadow: 0 0 1px #000;
 }
 
 /* Table */
